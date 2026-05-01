@@ -76,7 +76,7 @@ The dataset contains **19,667** FIFA player records (after cleaning). Each recor
 ---
 
 ## Repository Structure
-.
+
 ├── EDA_Preprocessing.ipynb # Full EDA, feature engineering, preprocessing pipeline, and data export
 
 ├── poly.ipynb # Polynomial regression (Task 4) with Ridge/Lasso
