@@ -100,3 +100,93 @@ The dataset contains **19,667** FIFA player records (after cleaning). Each recor
 ├── README.md # This file
 
 └── requirements.txt # Python dependencies
+
+
+
+---
+
+## Feature Engineering & Preprocessing
+
+All preprocessing steps are applied **only on the training set** and then propagated to the test set to prevent data leakage.
+
+1. **Continent Mapping**  
+   `Country` (164 categories) is replaced with `Continent` (Africa, Europe, Asia, North America, South America, Oceania), drastically reducing dimensionality while retaining geographical signals.
+
+2. **Team‑Tier Clustering (K‑Means)**  
+   Teams are grouped by their average `Overall_Rating`. K‑Means (k=4) segments them into four tiers: `Elite`, `High`, `Medium`, `Low`. The tier column is then ordinally encoded with the correct order, preserving the logical hierarchy.
+
+3. **Outlier Handling**  
+   Numerical features are clipped to the 1.5×IQR bounds computed from the training set. The same clipping is applied to the test set. The target `Value Per M$` is also capped to remove extreme outliers.
+
+4. **ColumnTransformer Pipeline**  
+   - **Numerical**: `SimpleImputer` (mean) → `StandardScaler`
+   - **One‑Hot encoded**: `Continent`, `Position`
+   - **Ordinal encoded**: `Team_Tier` (Low < Medium < High < Elite)
+
+The transformed data is saved as `X_train_transformed.csv` / `X_test_transformed.csv` with clear feature names.
+
+---
+
+## Models & Results
+
+### 1. Polynomial Regression (Task 4)
+
+The regression target is `Value Per M$`. All models are trained on the preprocessed data.
+
+- **Baseline Linear Regression**  
+  Test R² = 0.8005, RMSE = 0.4986
+
+- **Polynomial Degrees on Numerical Features**  
+  Only the four numerical columns are expanded. The categorical features are kept as‑is.
+
+  | Degree | Train R² | Test R² | Gap |
+  |--------|----------|---------|-----|
+  | 1 | 0.8147 | 0.8005 | 0.0142 |
+  | 2 | 0.8611 | 0.8498 | 0.0113 |
+  | 3 | 0.9063 | 0.8933 | 0.0130 |
+  | **4** | **0.9315** | **0.9158** | 0.0157 |
+
+  **Degree 4** was selected as it gives the highest test R² with a very small increase in overfitting.
+
+- **Regularisation (Ridge & Lasso) on Degree 4**
+
+  | Model | Best α | Test RMSE |
+  |-------|--------|-----------|
+  | Ridge | 12.7427 | **0.3204** |
+  | Lasso | 0.0010 | 0.3256 |
+
+  Ridge marginally outperforms Lasso because the polynomial + one‑hot features contain many correlated variables – Ridge spreads the penalty smoothly, while Lasso unnecessarily zeroes out some informative interactions.
+
+- **Lasso Feature Selection**  
+  Lasso with α=0.001 zeroes out 32 of 92 coefficients, discarding certain higher‑order terms like `Age × Future Potential` and `Future Potential²`. This confirms that not all interactions are equally important, but retaining them all (as Ridge does) yields a slight edge in predictive accuracy.
+
+> The best model reduces the RMSE by **35%** compared to the baseline linear regression.
+
+### 2. Naïve Bayes Classification (Task 6)
+
+The classification target is `Performance_Tier` (Low, Mid, High, Elite). `Overall_Rating` is excluded because it directly defines the tiers.
+
+Three Naïve Bayes variants were trained on the preprocessed data:
+
+| Model | Accuracy | Key Behaviour |
+|-------|----------|---------------|
+| GaussianNB | **0.792** | Works well on roughly Gaussian numerical features |
+| ComplementNB | 0.566 | Moderate performance, struggles with Elite class |
+| BernoulliNB | 0.520 | Only predicts the two majority classes |
+
+**GaussianNB** is the most appropriate because the numerical features follow approximately normal distributions, matching its core assumption. BernoulliNB expects binary features and fails to predict minority classes.
+
+- **Scaling Sensitivity**  
+  GaussianNB produces identical results with and without `StandardScaler`. Since it estimates per‑class means and variances, scaling changes the units but not the probability ratios – making it entirely unaffected by scaling.
+
+---
+
+## Running the Project
+
+1. **Clone the repository**
+
+   ```bash
+   git clone https://github.com/Dov-elhacker/fifa-players-analysis.git
+   cd fifa-players-analysis
+
+   
