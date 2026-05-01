@@ -78,14 +78,25 @@ The dataset contains **19,667** FIFA player records (after cleaning). Each recor
 ## Repository Structure
 .
 ├── EDA_Preprocessing.ipynb # Full EDA, feature engineering, preprocessing pipeline, and data export
+
 ├── poly.ipynb # Polynomial regression (Task 4) with Ridge/Lasso
+
 ├── Naive-bias.ipynb # Naïve Bayes classification (Task 6) with scaling sensitivity analysis
+
 ├── X_train_transformed.csv # Preprocessed training features (output of EDA_Preprocessing)
+
 ├── X_test_transformed.csv # Preprocessed test features
+
 ├── y_train_reg.csv # Regression target (train)
+
 ├── y_test_reg.csv # Regression target (test)
+
 ├── y_train_clf.csv # Classification target (train)
+
 ├── y_test_clf.csv # Classification target (test)
+
 ├── Fifa_with_Continents.csv # Intermediate dataset after continent mapping
+
 ├── README.md # This file
+
 └── requirements.txt # Python dependencies
